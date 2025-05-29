@@ -1,0 +1,1 @@
+1. The square and multiply algorithm is an algorithm that reduces the number of steps needed in calculating m^e mod n, where e is very large. It does not reduce the size of the numebrs being dealt with.
