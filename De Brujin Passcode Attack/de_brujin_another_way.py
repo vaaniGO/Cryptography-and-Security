@@ -1,5 +1,8 @@
+# These packages are used in the correctness test
+from collections import Counter
+from itertools import product
 k = 7
-n = 2
+n = 3
 # This is basically like wanting all 3 tuples where elements are in {a, b}. There are 2^3 = 8 such tuples
 # Let's use the graphical construct, not the Mantel's algorithm construct this time
 
@@ -17,53 +20,43 @@ print(arr2)
 matched_arr1 = [0]*(required_len+1)
 shift = 1
 shift_factor = 1 # 2 
-halfway = required_len//2
 start_shift = 0
 for i in range (1, required_len+1):
         # if (matched_arr1[i] != 0): # Already done through pairwise, so no need to compute anything
         #      continue
         matched_pos = (shift_factor)
         print("Matched position for ", i, "is: ", matched_pos)
-        matched_arr1[i] = matched_pos
-        matched_arr1[matched_pos] = i     
+        matched_arr1[i] = matched_pos 
         shift_factor = shift_factor + k 
         if (i % (repeat_times) == 0):
              start_shift = start_shift + 1
              shift_factor = start_shift + 1
-# i = 1 OK matched to 1, sf = 4
-# i = 2 OK matched to 4, sf = 7
-# i = 3 OK matched to 7, sf = 10
-# i = 4, OK sf = 1, start_shift = 1, matched to 2, sf = 4
-# i = 5, OK matched to 5, sf = 7
-# i = 6, OK matched to 8, sf = 10
-# i = 7, OK 
-# i = 8, OK
-# i = 9, 
-
-
 
 # We now have matched all original char positions with their positions in the new str
-# There is also another way to do this - if we have k = p, then starting at 1, we
+# if we have k = p, then starting at 1, we
 # fill every pth number, once we can't do anymore without exceeding required len, 
 # we start at 2 and fill every pth number,... so on and so forth till we reach p and 
 # fill every pth number. 
-str_arr = []
+str_arr = [0]
 print("Matched array: ", matched_arr1)
 matched = [False]*(required_len+1)
 
-for i in range(1, required_len):
-    matched_pos = matched_arr1[i]
-    if (matched[i] == True):
-         continue
+for i in range(1, required_len+1):
+    matched_pos = matched_arr1[i] # Returns the corresponding matching of the ith char 
+    if (matched[i] == True): # We have to do nothing if the node has already ben visited
+         continue 
     else :
-        matched[i] = True
-        str_arr.append(i)
-    str_arr.append(matched_pos)
+        matched[i] = True # We visit the node
+        str_arr.append(i) # Add it to the string
+    
+    if (matched[matched_pos] == False):
+        while matched[matched_pos] == False: # Iteratively traverse the graph
+            matched[matched_pos] = True
+            str_arr.append(matched_pos)
+            matched_pos = matched_arr1[matched_pos]
+    else:
+         continue
     # print(c, matched_pos)
-    while matched[matched_pos] == False:
-        matched[matched_pos] = True
-        matched_pos = matched_arr1[matched_pos]
-        str_arr.append(matched_pos)
 
 print("String_arr", str_arr)
 
@@ -71,8 +64,8 @@ print("String_arr", str_arr)
     # i = 2, mp= 3, mp != 2, while loop starts, 
 de_brujin_string = ""
 
-for elem in str_arr:
-     de_brujin_string = de_brujin_string + str(arr1[elem])
+for elem in str_arr[1: ]:
+     de_brujin_string = de_brujin_string + str(arr1[elem-1])
 
 print(de_brujin_string)
 
@@ -83,7 +76,29 @@ s = de_brujin_string
 # Consider it cyclic
 s_cyclic = s + s[:n-1]
 
-substrings = [s_cyclic[i:i+n] for i in range(len(s)+1)]
-unique_subs = set(substrings)
+# Generate all substrings of length n
+substrings = [s_cyclic[i:i+n] for i in range(len(s))]
+substring_counts = Counter(substrings)
 
-print(len(unique_subs))  # Should be 49
+# Generate the expected set of substrings using all k^n combinations
+alphabet = [str(i) for i in range(k)]
+expected_subs = {''.join(p) for p in product(alphabet, repeat=n)}
+
+# Report
+print("Unique substrings found:", len(substring_counts))
+print("Expected unique substrings:", len(expected_subs))
+
+# Check for repeated substrings
+repeated = {sub: count for sub, count in substring_counts.items() if count > 1}
+if repeated:
+    print("Repeated substrings and their counts:", repeated)
+else:
+    print("No repeated substrings")
+
+# Check for missing substrings
+missing = expected_subs - set(substring_counts)
+if missing:
+    print("Missing substrings:", missing)
+else:
+    print("All substrings present")
+
