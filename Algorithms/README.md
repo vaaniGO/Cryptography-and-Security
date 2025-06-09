@@ -1,1 +1,2 @@
 1. The square and multiply algorithm is an algorithm that reduces the number of steps needed in calculating m^e mod n, where e is very large. It does not reduce the size of the numebrs being dealt with.
+2. The kth-fi algorithm uses Eratosthenes' Sieve to find the 'kth' number in the sequence given by every number and all its coprimes as follows: "0/1, 1/1, 1/2, 1/3, 2/3, 1/4, 3/4, 1/5, 2/5, 3/5, 4/5, 1/6, 5/6, ...." with a focus on efficiency.
