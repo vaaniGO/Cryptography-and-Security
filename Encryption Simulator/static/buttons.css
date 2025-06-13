@@ -1,0 +1,51 @@
+.play {
+    background-color: #D91656;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 10px;
+    border: none;
+    font-family: inherit;
+    box-shadow: 4px 4px 0 hwb(0 0% 100%);
+    text-decoration: none;
+    font-weight: bolder;
+}
+
+.learn {
+    background-color: #FE8700;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 10px;
+    border: none;
+    font-family: inherit;
+    position: fixed;
+    bottom: 20px;
+    right: 100px;
+    box-shadow: 4px 4px 0 #000000;
+    color: black;
+    font-weight: bolder;
+    width: 100px;
+}
+
+.compute-button {
+    background-color: #D91656;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 10px;
+    border: none;
+    box-shadow: 4px 4px 0 hwb(0 0% 100%);
+    font-family: inherit;
+}
+
+button {
+    font-size: 16px;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+button:disabled {
+    background-color: #ffffff5d;
+    color: #ffffff;
+    cursor: not-allowed;
+}

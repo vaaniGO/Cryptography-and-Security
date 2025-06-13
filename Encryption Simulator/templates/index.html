@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/home.css">
+    <link rel="stylesheet" href="../static/buttons.css">
+    <title>Home Page</title>
+</head>
+
+<body>
+    <div class="grid-container">
+        <div class="grid-header">
+            <h1>Encryption Simulator</h1>
+        </div>
+        <div class="grid-subheader">
+            <h4>Alice and Bob want to encrypt messages and communicate with each other. However, they do not have a
+                symmetric key to
+                encrypt messages with. They must first give each other a proof of their identities, then agree on a key
+                and start
+                talking.</h4>
+        </div>
+        <div class="avatar-container-wrapper">
+            <div class="avatar">
+                <img src="{{ url_for('static', filename='img/alice.png') }}" alt="Alice">
+                <a href="{{ url_for('player_view', person_name='alice') }}" class="play">Play Alice</a>
+            </div>
+            <div class="avatar">
+                <img src="{{ url_for('static', filename='img/bob.png') }}" alt="Bob">
+                <a href="{{ url_for('player_view', person_name='bob') }}" class="play">Play Bob</a>
+            </div>
+        </div>
+    </div>
+    <button class="learn" onclick="window.location.href='/learn'">Learn</button>
+</body>
+
+</html>

@@ -1,0 +1,35 @@
+<div class="other_perspective process-container">
+    <div class="avatar-container" style="padding-top: 10px; height: 100px; justify-content: center;">
+        <img src="{{ url_for('static', filename='img/' + data.other_person + '.png') }}" alt="{{ data.other_person }}">
+        <h3 class="avatar-title" style="color: black;">{{ data.other_person }}</h3>
+    </div>
+    <div class="process-step">
+        <div class="process-step-instruction">
+            <h3>{{data.other_person}} generated their key pair.</h3>
+            <br>The primes they picked: {{data.other_person_primes}}
+            <br> n = {{data.other_person_n}}, e = {{data.other_person_e}}
+            <br> {{data.other_person}}'s Secret Key: {{data.other_person_private_key}}
+        </div>
+    </div>
+    <div class="process-step">
+        <div class="process-step-instruction">
+            <h3>Bob used your new public key to send a message to you.</h3>
+            <br>The message they picked: {{data.other_person_msg}}.
+            <br> After raising it to their private exponent = {{data.other_person_signed_msg}}
+            <br> Then they waited for your response.
+        </div>
+    </div>
+    <div class="process-step">
+        <div class="process-step-instruction">
+            <h3>You verified Bob's identity and shared the encrypted symmetric key.</h3>
+            <br>Message received by them: {{data.signedSymKey}}
+            <br> They raised it to your public exponent and got {{data.key_raised}}
+            <br> They hashed the encrypted key and got {{data.hashed_key}}
+            <br> The two matched so they verified your identity.
+            <br> Then, they decrypted the encrypted symmetric key by raising it to their private exponent and
+            got {{data.decrypted_key}}
+            <h3 class="process-header" style="color: rgba(21, 255, 0, 0.706);">{{data.other_person}} initiated secure
+                communication with you!</h3>
+        </div>
+    </div>
+</div>

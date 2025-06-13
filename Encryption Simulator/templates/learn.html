@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/buttons.css">
+    <link rel="stylesheet" href="../static/styles.css">
+    <link rel="stylesheet" href="../static/home.css">
+    <title>Learn</title>
+</head>
+
+<style>
+    h3 {
+        color: #D91656;
+    }
+
+    .image-container {
+        display: flex;
+        height: 300px;
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .image-container img {
+        height: inherit;
+        width: auto;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    th,
+    td {
+        border: 1px solid #333;
+        padding: 8px 12px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f2f2f26f;
+    }
+</style>
+
+<body>
+
+    <div class="grid-container">
+        <div class="grid-header">
+            <h1>Learn about RSA Encryption and Signatures</h1>
+        </div>
+        <h3>Cryptography goals</h3>
+        <h4>
+            1. Confidentiality - only the intended recipient can read the message. <br><br>
+            2. Integrity - the message has not been altered in transit. <br><br>
+            3. Authentication - the sender is who they claim to be. <br><br>
+        </h4>
+        <h3>
+            RSA = Rivest-Shamir-Adleman
+        </h3>
+        <div class="image-container">
+            <img src="../static/img/rsa.png" alt="RSA Logo" class="rsa-logo">
+        </div>
+        <h4>
+            1. Choose two large primes - call these p and q <br><br>
+            2. Calculate their product, call this n, and find its totient function (i.e. no. of integers coprime to
+            n),
+            using the formula (p-1)(q-1).
+            We get this formula because p and q are the only prime factors of n naturally. <br><br>
+            3. Find a number e such that 1 < e < totient(n) and gcd(e, totient(n))=1. This means e is coprime to the
+                totient of n. <br><br>
+                4. Find d such that d * e mod totient(n) = 1. This means d is the modular multiplicative inverse of
+                e
+                mod totient(n). This is easy to do
+                using algorithms like extended euclidean algorithm. <br><br>
+                5. The public key is (n, e) and the private key is (n, d). <br><br>
+                Why is this 'hard' to break? Because given (n, e), it is impossible to find the prime factors of n
+                (even
+                optimised brute force is infeasible), and no one can therefore find d.
+                <br><br>
+        </h4>
+        <h3>Eve's tactics</h3>
+        <div class="avatar-container-wrapper">
+            <div class="avatar">
+                <img src="{{ url_for('static', filename='img/eve.png') }}" alt="Eve">
+            </div>
+        </div>
+        <table border="1">
+            <tr>
+                <th>If Alice/Bob don't...</th>
+                <th>Eve will...</th>
+            </tr>
+            <tr>
+                <td>Hash the message before signing it</td>
+                <td>Generate infinitely many valid message-signature pairs using one valid pair (due to malleability or
+                    length-extension attacks)</td>
+            </tr>
+            <tr>
+                <td>Use a function which produces a unique 'hash' for every message</td>
+                <td>Find a different message that produces the same hash (collision attack)</td>
+            </tr>
+            <tr>
+                <td>Use a strong cryptographic hash function</td>
+                <td>Exploit weaknesses to find collisions or preimages (e.g., if using MD5 or SHA-1)</td>
+            </tr>
+            <tr>
+                <td>Bind the signature to a specific context (e.g., protocol metadata)</td>
+                <td>Replay the signature in a different context (replay attack)</td>
+            </tr>
+            <tr>
+                <td>Protect their private key properly</td>
+                <td>Steal the private key and forge signatures</td>
+            </tr>
+        </table>
+
+
+    </div>
+    <button class="learn" onclick="history.back()">Back</button>
+    <button class="learn" onclick="window.location.href='/'" style="bottom: 70px;">Home</button>
+
+
+</body>
+
+</html>

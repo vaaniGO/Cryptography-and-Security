@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/buttons.css">
+    <link rel="stylesheet" href="../static/styles.css">
+    <title>Player Mode: {{ data.person }}</title>
+</head>
+
+<body>
+    <div class="info-container-container">
+        <div class="info-container public_information" id="public-information">
+            <h3 class="information-title">Public Information</h3>
+            <div class="info">
+                {{ data.public_information }}
+            </div>
+        </div>
+        <div class="info-container received_information" id="received-information">
+            <h3 class="information-title">Received Information</h3>
+            <div class="info">
+                {{data.received_information}}
+            </div>
+        </div>
+    </div>
+    <div class="process-container-container" id="process-container-container">
+        {% if data.current_process == 'key_generation' %}
+        <div class="key-gen process-container">
+            <div class="process-header">
+                <h3>Generate Key for {{data.person}}</h3>
+            </div>
+            <div class="process-step">
+                <div class="process-step-instruction">
+                    Pick two large primes (p, q) such that p != q
+                </div>
+                <div class="result" id="primes-result"></div>
+                <div class="process-step-buttons">
+                    <button class="compute-button" id="pick-primes-btn">Compute</button>
+                    <!--Change the text when computation is done and disable the button-->
+                </div>
+            </div>
+            <div class="process-step">
+                <div class="process-step-instruction">
+                    Compute Euler totient of n = (p*q)
+                </div>
+                <div class="result" id="euler-result"></div>
+                <div class="process-step-buttons">
+                    <button class="compute-button" id="euler-totient-btn" disabled>Compute</button>
+                    <!--Change the text when computation is done and disable the button-->
+                </div>
+            </div>
+            <div class="process-step">
+                <div class="process-step-instruction">
+                    Choose a public exponent e such that 1 < e < φ(n) and gcd(e, φ(n))=1 </div>
+                        <div class="result" id="e-result"></div>
+                        <div class="process-step-buttons">
+                            <button class="compute-button" id="pick-e-btn" disabled>Compute</button>
+                        </div>
+                </div>
+                <div class="process-step">
+                    <div class="process-step-instruction">
+                        Compute the private key d such that d * e ≡ 1 (mod φ(n))
+                    </div>
+                    <div class="result" id="d-result"></div>
+                    <div class="process-step-buttons">
+                        <button class="compute-button" id="pick-d-btn" disabled>Compute</button>
+                        <!--Change the text when computation is done and disable the button-->
+                    </div>
+                </div>
+                <div class="process-header" id="completion-message">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if data.current_process == 'begin_verify_cert' %}
+        <div class="process-container">
+            <div class="process-header">
+                You have received a message - you must now verify if this is sent by {{data.other_person}}!
+            </div>
+            <button class="play" onClick="verifyNow()">Begin Verification</button>
+        </div>
+        {% endif %}
+        {% if data.current_process == 'verify_cert' %}
+        <div class="verify_cert process-container">
+            <div class="process-step process-info">
+                <!-- <div class="process-step-instruction">
+                    Why are we comparing the hash of the original message? It is necessary for Bob to have hashed the
+                    message and signed it.
+                    If he did not do so, then <br>
+                    <br> 1. Eve can find another message with the same hash that would verify correctly under Bobs
+                    signature - since hashing produces a unique output for every input, this is prevented.
+                    <br> 2. Different size messages could take different amounts of time to sign / verify - this could
+                    give clues to Eve as to the content of the messages. Hashing makes this uniform for messages of all
+                    sizes.
+                    <br> 3. Eve could derive infinite valid message, signature pairs by raising the message and
+                    signature to the same exponent! <br>
+                </div> -->
+            </div>
+            <div class="process-step">
+                <div class="process-step-instruction">
+                    Raise the signed message to e and take modulo n
+                </div>
+                <div class="process-step-buttons">
+                    <div class="result" id="compute-sign-e-result"></div>
+                    <button class="compute-button" id="compute-sign-e-btn"
+                        onClick="showDecrypted(this)">Compute</button>
+                </div>
+            </div>
+            <div class="process-step">
+                <div class="process-step-instruction">
+                    Compute the hash of the original message using SHA-256
+                </div>
+                <div class="process-step-buttons">
+                    <div class="result" id="compute-hash-m-result"></div>
+                    <button class="compute-button" id="compute-hash-m-btn"
+                        onClick="showRecomputedHash(this)">Compute</button>
+                </div>
+            </div>
+            <div class="process-header" id="completion-message">
+            </div>
+        </div>
+        {% endif %}
+        {% if data.current_process == 'gen_symmetric_key' %}
+        <div class="gen_symmetric_key process-container" id="gen_symmetric_key">
+            <div class="'process-header">
+                <h3>Generate a Symmetric Key for {{data.other_person}}, sign it and send it</h3>
+            </div>
+            <div class="process-step">
+                <div class="process-step-instruction">
+                    Get Key
+                </div>
+                <div class="process-step-buttons">
+                    <div class="result" id="symmetric-key-result"></div>
+                    <button class="play" onClick="generateSymKey(this)">Get a symmetric key</button>
+                </div>
+            </div>
+            <div class="process-step">
+                <div class="process-step-instruction">
+                    Encrypt it with Bob's Public Key
+                </div>
+                <div class="process-step-buttons">
+                    <div class="result" id="symmetric-key-encryption-result"></div>
+                    <button class="play" id="symmetric-key-encryption-btn"
+                        onClick="showEncryptedKey(this)">Compute</button>
+                </div>
+            </div>
+            <div class="process-step">
+                <div class="process-step-instruction">
+                    Hash
+                </div>
+                <div class="process-step-buttons">
+                    <div class="result" id="hash-key-result"></div>
+                    <button class="play" onClick="showHashedKey(this)">Compute</button>
+                </div>
+            </div>
+            <div class="process-step">
+                <div class="process-step-instruction">
+                    Sign
+                </div>
+                <div class="process-step-buttons">
+                    <div class="result" id="sign-key-result"></div>
+                    <button class="play" onClick="showSignedKey(this)">Compute</button>
+                </div>
+            </div>
+            <div class="process-step">
+                <div class="process-step-instruction">
+                    Finish and send
+                </div>
+                <div class="process-step-buttons">
+                    <div class="result" id="finished-result"></div>
+                    <button class="play" id="send-key-to-other-btn" onClick="sendKeyToOther(this)">Send to Bob</button>
+                </div>
+            </div>
+            <div id="completion-message">
+
+            </div>
+        </div>
+        {% endif %}
+        {% if data.current_process == 'send_message' %}
+        <div class="send_message">
+
+        </div>
+        {% endif %}
+        {% if data.current_process == 'receive_message' %}
+        <div class="receive_message">
+            <div class="process-container">
+                <div class="process-step">
+                    <div class="process-header">You have received a message from Bob!</div>
+                    <div class="received-msg" id="received-msg">{{data.receivedMessage}}</div>
+                    <div class="process-step-buttons">
+                        <div class="result" id="decrypted-msg-result" style="margin: 20px; font-weight: bolder;"></div>
+                        <div class="additional-info-container result" id="additional-info-decryption"
+                            style="background-color: rgba(255, 255, 255, 0.402); margin: 20px;">This process used the
+                            AES system. Since the key is too small for AES, we padded it to make it valid.</div>
+                        <!-- <div id="input-own-enc-text"><input tpye="text" id="input-enc-text"></div> -->
+                        <button class="play" onClick="decryptMsg(this)">Decrypt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="avatar-container">
+        <img src="{{ url_for('static', filename='img/' + data.person + '.png') }}" alt="{{ data.person }}">
+        <h3 class="avatar-title">{{ data.person }}</h3>
+        <div class="private-key-container" id="private-key-container">{{data.own_private_key}}</div>
+        <div id="knowledge-section">
+            {% if data.current_process == 'key_generation' %}
+            <h3 class="process-header">What's happening?</h3>
+            Why is this a 'hard' problem? Given (p*q, e), we cannot find d because since we do not know the two primes
+            (the hard problem being factoring of a very large number), we cannot easily compute the totient
+            function φ(n) = (p-1)(q-1). The only way to find d is to try all possible values of d until we find one that
+            satisfies the equation d * e ≡ 1 (mod φ(n)).
+            {% endif %}
+            {% if data.current_process == 'begin_verify_cert' %}
+            <h3 class="process-header">What's happening?</h3>
+            We have successfully used a 'hard' problem to generate a secure public and private key pair. Now, anyone who
+            knows our public key
+            can send us messages. But, we may or may not want to send messages back or trust the identity of the message
+            sender. So, as we do in
+            real life too, let's look for a signature - a mark of authenticity.
+            {% endif %}
+            {% if data.current_process == 'verify_cert' %}
+            <h3 class="process-header">What's happening?</h3>
+            We have received a message from someone claiming to be Bob. Now, we want to verify if it is actually Bob we
+            are talking to
+            by checking the authenticity of the digital signature. We can do so if we raise signed message ^ e and take
+            modulo n. Since b signed the messageby raising
+            it to d, raising it to e returns the original message again. Now, instead of doing this on the message, Bob
+            did this on the hash of the message,
+            to protect it from tampering by Eve.
+            {% endif %}
+            {% if data.current_process == 'gen_symmetric_key' %}
+            <h3 class="process-header">What's happening?</h3>
+            We now trust Bob. What is left? For Bob to trust us. Once that is done, we both trust each other and can
+            exchange a symmetric key and initiate secure
+            communication. For Bob to trust us, we want to send a proof of our identity along with the proposed
+            symmetric key. So, we generate the key, sign it, and send it to Bob.
+            <br><br>
+            Why is the key so small?
+            We are working on an average
+            system that cannot compute large numbers efficiently. For RSA to work, the message size must be
+            smaller than n. Here, our message is the key!
+            {% endif %}
+            {% if data.current_process == 'receive_message' %}
+            <h3 class="process-header">What's happening?</h3>
+            We have received a gibberish-looking piece of information from Bob. We must decrypt it to make sense of it.
+            How do you know that the encrypted text and decrypted text actually match? Run <a href="../test_cipher.py"
+                download style="color: rgb(0, 218, 251); text-decoration: underline;">
+                this (click to download)</a>
+            script using your
+            symmetric key to verify. You can also go to 'Send Message', copy the encryption from there and paste it
+            here.
+            {% endif %}
+        </div>
+        <button class="learn" onclick="window.location.href='/learn'">Learn</button>
+        <button class="learn" onclick="window.location.href='/'" style="bottom: 70px;">Home</button>
+    </div>
+</body>
+
+<!-- KeyGen.js -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- SELECTORS are the same ---
+        const pickPrimesBtn = document.getElementById('pick-primes-btn');
+        const eulerTotientBtn = document.getElementById('euler-totient-btn');
+        const pickEBtn = document.getElementById('pick-e-btn');
+        const pickDBtn = document.getElementById('pick-d-btn');
+
+        const primesResult = document.getElementById('primes-result');
+        const eulerResult = document.getElementById('euler-result');
+        const eResult = document.getElementById('e-result');
+        const dResult = document.getElementById('d-result');
+        const privateKeyDisplay = document.getElementById('private-key-container');
+        const completionMessage = document.getElementById('completion-message');
+        const publicInformation = document.getElementById('public-information');
+
+        // --- GLOBAL STATE to hold ALL the data fetched at once ---
+        let keyData = {};
+
+        // --- EVENT LISTENERS ---
+
+        // Step 1: THIS BUTTON DOES ALL THE WORK
+        // It fetches all data and then displays only the first part.
+        pickPrimesBtn.addEventListener('click', () => {
+            pickPrimesBtn.textContent = 'Computing...';
+            pickPrimesBtn.disabled = true;
+
+            // Make the SINGLE fetch call to our new all-in-one route
+            fetch("{{ url_for('performKeyGen') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ player: '{{ data.person }}' })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    // Store the ENTIRE dataset globally for later use
+                    keyData = data;
+
+                    // --- UI Update for Step 1 ONLY ---
+                    primesResult.style.display = 'block';
+                    primesResult.textContent = keyData.primes_message;
+                    pickPrimesBtn.style.display = 'none';
+                    eulerTotientBtn.disabled = false; // Enable the next button
+                })
+                .catch(err => console.error(err));
+        });
+
+        // Step 2: THIS BUTTON NOW MAKES NO NETWORK CALL
+        // It just reads the pre-fetched data from the keyData object.
+        eulerTotientBtn.addEventListener('click', () => {
+            eulerTotientBtn.textContent = 'Revealing...'; // Text changed for clarity
+            eulerTotientBtn.disabled = true;
+
+            // --- UI Update for Step 2 ---
+            eulerResult.style.display = 'block';
+            eulerResult.textContent = keyData.euler_message;
+            eulerTotientBtn.style.display = 'none';
+            pickEBtn.disabled = false; // Enable the next button
+        });
+
+        // Step 3: THIS BUTTON ALSO MAKES NO NETWORK CALL
+        pickEBtn.addEventListener('click', () => {
+            pickEBtn.textContent = 'Revealing...';
+            pickEBtn.disabled = true;
+
+            // --- UI Update for Step 3 ---
+            eResult.style.display = 'block';
+            eResult.textContent = keyData.e_message;
+            pickEBtn.style.display = 'none';
+            pickDBtn.disabled = false; // Enable the final button
+        });
+
+        // Step 4: THE FINAL BUTTON ALSO MAKES NO NETWORK CALL
+        pickDBtn.addEventListener('click', () => {
+            pickDBtn.textContent = 'Revealing...';
+            pickDBtn.disabled = true;
+
+            // --- UI Update for Step 4 ---
+            dResult.style.display = 'block';
+            dResult.textContent = keyData.d_message;
+            pickDBtn.style.display = 'none';
+            privateKeyDisplay.textContent = 'My Private Key: ' + keyData.d;
+            completionMessage.innerHTML = '<h3>Key Generation Complete!</h3> <button class="play" onClick="verifyCertificate()">Continue</button>';
+            publicInformation.innerHTML += '<p><br>{{data.person}} Public Key: n: ' + keyData.n + ' e: ' + keyData.e + '</p>';
+        });
+    });
+</script>
+
+<!--Begin verify Certificate.js-->
+<script>
+    function verifyCertificate() {
+        fetch("{{ url_for('beginVerifyCert') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                player: '{{ data.person }}'
+            })
+        })
+            .then(response => response.text())
+            .then(html => {
+                // Replace the entire page content with the new rendered template
+                document.documentElement.innerHTML = html;
+            })
+            .catch(err => console.error(err));
+    }
+
+    function verifyNow() {
+        fetch("{{ url_for('verifyCert') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                player: '{{ data.person }}'
+            })
+        })
+            .then(response => response.text())
+            .then(html => {
+                // Replace the entire page content with the new rendered template
+                document.documentElement.innerHTML = html;
+            })
+            .catch(err => console.error(err));
+    }
+</script>
+
+<!--Verify certificate.js-->
+<script>
+    let verificationData = {};
+    // const computeHashMBtn = document.getElementById('compute-hash-m-btn');
+    // if (computeHashMBtn) {
+    //     computeHashMBtn.disabled = true;
+    // }
+
+    function showDecrypted(buttonElement) {
+        const computeSignEResult = document.getElementById('compute-sign-e-result');
+        const computeHashMBtn = document.getElementById('compute-hash-m-btn');
+        buttonElement.textContent = 'Computing...';
+        buttonElement.disabled = true;
+
+        // Make the SINGLE fetch call to the all-in-one verification route
+        fetch("{{ url_for('verifyValidSig') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                player: '{{ data.other_person }}'
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                verificationData = data;
+
+                // --- UI Update for Step 1 ONLY ---
+                computeSignEResult.textContent = verificationData.decrypted_hash;
+                computeSignEResult.style.display = 'block';
+                buttonElement.style.display = 'none'; // Hide the button
+                computeHashMBtn.disabled = false;      // Enable the next button
+            })
+            .catch(err => console.error(err));
+    }
+
+    function showRecomputedHash(buttonElement) {
+        const computeHashMResult = document.getElementById('compute-hash-m-result');
+        const completionMessage = document.getElementById('completion-message');
+        const computeSignEResult = document.getElementById('compute-sign-e-result');
+        buttonElement.textContent = 'Revealing...';
+        buttonElement.disabled = true;
+
+        computeHashMResult.textContent = verificationData.recomputed_hash;
+        computeHashMResult.style.display = 'block';
+        buttonElement.style.display = 'none';
+
+        if (!verificationData.is_verified) {
+            computeHashMResult.style.backgroundColor = 'red';
+            computeSignEResult.style.backgroundColor = 'red';
+            completionMessage.innerHTML = `
+            <h3>Verification Failed!</h3>
+            <button class="play" style="margin-right: 10px;" onClick="requestAgain()">Request Again</button>
+            `;
+            completionMessage.style.color = 'red';
+        }
+        else {
+            completionMessage.innerHTML = `
+            <h3>Verification Success! Now we trust Bob and can send him a symmetric key.</h3>
+            <button class="play" style="margin-right: 10px;" onClick="genSymKey()">Generate a Key</button>
+            `;
+            completionMessage.style.color = 'green';
+        }
+    }
+</script>
+
+<!--Symmetric Key.js-->
+<script>
+    symKeyData = {};
+
+    function genSymKey() {
+        fetch("{{ url_for('make_sym_key') }}", {
+            method: 'POST'
+        })
+            .then(response => response.text())
+            .then(html => {
+                // Replace the entire page content with the new rendered template
+                document.documentElement.innerHTML = html;
+            })
+            .catch(err => console.error(err));
+    }
+
+    function generateSymKey(buttonElement) {
+        const symmetricKeyResult = document.getElementById('symmetric-key-result');
+        const showEncryptedBtn = document.getElementById('symmetric-key-encryption-btn');
+        fetch("{{ url_for('generateKeyData') }}", {
+            method: 'POST'
+        })
+            .then(res => res.json())
+            .then(data => {
+                symKeyData = data;
+
+                // --- UI Update for Step 1 ONLY ---
+                symmetricKeyResult.textContent = symKeyData.symmetricKey;
+                symmetricKeyResult.style.display = 'block';
+                buttonElement.style.display = 'none'; // Hide the button
+                showEncryptedBtn.disabled = false;      // Enable the next button
+            })
+            .catch(err => console.error(err));
+    }
+
+    function showEncryptedKey(buttonElement) {
+        const resultDiv = document.getElementById('symmetric-key-encryption-result');
+        resultDiv.textContent = symKeyData.encryptedKey;
+        resultDiv.style.display = 'block';
+
+        // Disable current button, enable next
+        buttonElement.style.display = 'none';
+    }
+
+    function showHashedKey(buttonElement) {
+        const resultDiv = document.getElementById('hash-key-result');
+        resultDiv.textContent = symKeyData.hashed;  // Optional: you can display the hash separately if needed
+        resultDiv.style.display = 'block';
+
+        // Disable current button, enable next
+        buttonElement.style.display = 'none';
+    }
+
+    function showSignedKey(buttonElement) {
+        const resultDiv = document.getElementById('sign-key-result');
+        resultDiv.textContent = symKeyData.signature;
+        resultDiv.style.display = 'block';
+
+        // Disable current button, enable next
+        buttonElement.style.display = 'none';
+    }
+
+    function sendKeyToOther(buttonElement) {
+        const private_key_container = document.getElementById('private-key-container');
+        fetch("{{ url_for('sendSymKey') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(symKeyData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                const completion_msg = document.getElementById('completion-message');
+                const sendToOtherBtn = document.getElementById('send-key-to-other-btn');
+                sendToOtherBtn.disabled = true;
+                completion_msg.innerHTML += '<h3 style="color: green;">Bob trusts you! Secure communication initiated!</h3>' +
+                    '<button class="play" onClick="sendMessages()" style="margin-right: 10px;">Send Messages</button>' +
+                    '<button class="play" onClick="getMessages()" style="margin-left: 10px; margin-right: 10px;">Get Messages</button>' +
+                    '<button class="play" style="margin-left: 10px;" onClick="viewOtherPerspective(this)" id="view-other-btn">View {{data.other_person}} perspective</button>';
+                private_key_container.innerHTML += 'Private Symmetric Key: ' + symKeyData.symmetricKey;
+            })
+            .catch(err => console.error(err));
+    }
+
+    function requestAgain() {
+        fetch("{{ url_for('beginVerifyCert') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                player: '{{ data.person }}'
+            })
+        })
+            .then(response => response.text())
+            .then(html => {
+                // Replace the entire page content with the new rendered template
+                document.documentElement.innerHTML = html;
+            })
+            .catch(err => console.error(err));
+    }
+
+</script>
+
+<script>
+    function viewOtherPerspective(buttonElement) {
+        const otherPerson = buttonElement.getAttribute('data-other');
+
+        if (buttonElement.textContent.includes('Hide')) {
+            // Remove the last appended 'other_perspective' block
+            const container = document.getElementById("process-container-container");
+            const lastChild = container.lastElementChild;
+            if (lastChild && lastChild.classList.contains('other_perspective')) {
+                container.removeChild(lastChild);
+            }
+            buttonElement.textContent = `View {{data.other_person}} Perspective`;
+            return;
+        }
+
+        fetch("{{ url_for('viewOtherPerspective') }}", {
+            method: 'POST'
+        })
+            .then(response => response.text())
+            .then(html => {
+                const container = document.getElementById("process-container-container");
+                buttonElement.textContent = `Hide {{data.other_person}} Perspective`;
+                container.innerHTML += html;
+            })
+            .catch(err => console.error(err));
+    }
+
+    function sendMessages() {
+        fetch("{{ url_for('sendMessage') }}", {
+            method: 'POST'
+        })
+            .then(response => response.text())
+            .then(html => {
+                document.documentElement.innerHTML = html;
+            })
+            .catch(err => console.error(err));
+    }
+
+    function getMessages() {
+        fetch("{{ url_for('getMessage') }}", {
+            method: 'POST'
+        })
+            .then(response => response.text())
+            .then(html => {
+                document.documentElement.innerHTML = html;
+            })
+            .catch(err => console.error(err));
+    }
+
+    function decryptMsg(buttonElement) {
+        const msg = document.getElementById('received-msg').textContent;
+        const decrypted_msg_result = document.getElementById('decrypted-msg-result');
+        const addInfoBox = document.getElementById('additional-info-decryption');
+        fetch("{{ url_for('decryptSKMessage') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                msg: msg
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                decryptedMsg = data.decrypted_message;
+                decrypted_msg_result.textContent = `Message: ${decryptedMsg}`;
+                decrypted_msg_result.style.display = 'block';
+                addInfoBox.style.display = 'block';
+                buttonElement.style.display = 'none';
+            })
+            .catch(err => console.error(err));
+    }
+</script>
+
+</html>
